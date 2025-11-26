@@ -12,7 +12,7 @@ export const getDashboard = async (req, res) => {
     const taskStats = await pool.query(`
       SELECT 
         SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) AS completed,
-        SUM(CASE WHEN status = 'in-progress' THEN 1 ELSE 0 END) AS in_progress,
+        SUM(CASE WHEN status = 'in_progress' THEN 1 ELSE 0 END) AS in_progress,
         SUM(CASE WHEN status = 'overdue' THEN 1 ELSE 0 END) AS overdue
       FROM tasks
     `);
@@ -37,7 +37,7 @@ export const getEmployees = async (req, res) => {
       SELECT 
         u.id, u.name, u.department, u.photo,
         COUNT(t.id) FILTER (WHERE t.status = 'completed') AS completed_tasks,
-        COUNT(t.id) FILTER (WHERE t.status = 'in-progress') AS in_progress_tasks,
+        COUNT(t.id) FILTER (WHERE t.status = 'in_progress') AS in_progress_tasks,
         COUNT(t.id) FILTER (WHERE t.status = 'overdue') AS overdue_tasks
       FROM users u
       LEFT JOIN tasks t ON t.user_id = u.id
@@ -62,7 +62,7 @@ export const addEmployee = async (req, res) => {
 
     const result = await pool.query(
       `INSERT INTO users (name, photo, department, email, password ,role_id)
-       VALUES ($1, $2, $3, $4, $5)
+       VALUES ($1, $2, $3, $4, $5, $6)
        RETURNING id, name, email`,
       [name, photo, department, email, hashedPassword, 1]
     );
@@ -270,9 +270,10 @@ export const deleteTask = async (req, res) => {
   try {
     const { task_id } = req.params;
 
+    await pool.query(`DELETE FROM task_progress WHERE task_id = $1`, [task_id]);
     await pool.query(`DELETE FROM tasks WHERE id = $1`, [task_id]);
 
-    res.json({ message: "Task deleted" });
+    res.json({ message: "Task and related progress deleted successfully" });
   } catch (err) {
     console.error("Delete Task Error:", err);
     res.status(500).json({ error: "Server error" });

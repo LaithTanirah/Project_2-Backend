@@ -41,7 +41,9 @@
   "Authorization": "Bearer <token>"
 }
 `
+
 **Required Permission: read_task**
+
 **Success 200**
 ```json
 {
